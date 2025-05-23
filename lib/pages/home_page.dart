@@ -32,7 +32,7 @@ class HomePage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            buildMenuCard(context, 'KATALOG', Icons.menu_book, const KatalogPage()),
+            buildMenuCard(context, 'KATALOG', Icons.menu_book, KatalogPage()),
             const SizedBox(height: 16),
             buildMenuCard(context, 'PESANAN', Icons.receipt_long, const PesananPage()),
             const SizedBox(height: 16),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'pages/form_pesanan_page.dart';
-import 'home_screen.dart';  // Impor file home_screen
+import 'pages/home_page.dart';  // Impor file home_screen
 
 void main() async{
   // runApp(const MyApp());
@@ -41,7 +41,7 @@ class SylauApps extends StatelessWidget {
         useMaterial3: true,
       ),
       // home: const MyHomePage(title: 'Flutter Demo Home Page'),
-      home: FormPesananPage(),
+      home: HomePage(),
     );
   }
 }

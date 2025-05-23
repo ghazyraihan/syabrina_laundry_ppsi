@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "700521449595",
+    "project_id": "sylau-apps",
+    "storage_bucket": "sylau-apps.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:700521449595:android:93dff910221890d0577ade",
+        "android_client_info": {
+          "package_name": "com.example.syabrina_laundry_ppsi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB18cHFdkSr9L3C6F8xZY5qt85FbHkruro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

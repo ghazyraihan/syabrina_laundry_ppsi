@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'katalog_page.dart';
 import 'pesanan_page.dart';
 import 'keuangan_page.dart';
+import 'profile.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -21,29 +22,38 @@ class HomePage extends StatelessWidget {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ],
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.person, size: 30),
-          )
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person, size: 30),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
+              );
+            },
+          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            buildMenuCard(context, 'KATALOG', Icons.menu_book, const KatalogPage()),
+            buildMenuCard(
+                context, 'KATALOG', Icons.menu_book, const KatalogPage()),
             const SizedBox(height: 16),
-            buildMenuCard(context, 'PESANAN', Icons.receipt_long, const PesananPage()),
+            buildMenuCard(
+                context, 'PESANAN', Icons.receipt_long, const PesananPage()),
             const SizedBox(height: 16),
-            buildMenuCard(context, 'KEUANGAN', Icons.attach_money, const KeuanganPage()),
+            buildMenuCard(
+                context, 'KEUANGAN', Icons.attach_money, const KeuanganPage()),
           ],
         ),
       ),
     );
   }
 
-  Widget buildMenuCard(BuildContext context, String title, IconData icon, Widget destinationPage) {
+  Widget buildMenuCard(BuildContext context, String title, IconData icon,
+      Widget destinationPage) {
     return GestureDetector(
       onTap: () {
         Navigator.push(

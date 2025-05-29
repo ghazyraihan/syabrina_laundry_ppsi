@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart'; // Pastikan file ini ada
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
+  void _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (route) => false, // Hapus semua halaman sebelumnya
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -39,12 +52,10 @@ class ProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Column(
                 children: [
-                  // Placeholder for profile image
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.grey[300],
-                    child:
-                        const Icon(Icons.person, size: 50, color: Colors.white),
+                    child: const Icon(Icons.person, size: 50, color: Colors.white),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -52,19 +63,22 @@ class ProfilePage extends StatelessWidget {
                     style: TextStyle(color: Colors.black54),
                   ),
                   const SizedBox(height: 24),
-                  const TextField(
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: TextEditingController(text: user?.displayName ?? ''),
+                    decoration: const InputDecoration(
                       labelText: 'Username',
                       border: OutlineInputBorder(),
                     ),
+                    readOnly: true,
                   ),
                   const SizedBox(height: 16),
-                  const TextField(
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: TextEditingController(text: user?.email ?? ''),
+                    decoration: const InputDecoration(
                       labelText: 'Email',
-                      hintText: 'email oy email',
                       border: OutlineInputBorder(),
                     ),
+                    readOnly: true,
                   ),
                   const SizedBox(height: 16),
                   const TextField(
@@ -101,7 +115,7 @@ class ProfilePage extends StatelessWidget {
                         side: const BorderSide(color: Colors.black12),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {},
+                      onPressed: () => _logout(context),
                       child: const Text(
                         'Logout',
                         style: TextStyle(color: Colors.black),

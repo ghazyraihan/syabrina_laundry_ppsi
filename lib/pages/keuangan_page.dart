@@ -12,6 +12,11 @@ class _KeuanganPageState extends State<KeuanganPage>
   late TabController _tabController;
   int _selectedIndex = 0;
 
+  final List<Map<String, dynamic>> pengeluaranList = [];
+
+  final TextEditingController namaController = TextEditingController();
+  final TextEditingController jumlahController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -26,20 +31,84 @@ class _KeuanganPageState extends State<KeuanganPage>
   @override
   void dispose() {
     _tabController.dispose();
+    namaController.dispose();
+    jumlahController.dispose();
     super.dispose();
   }
 
-  Widget _buildHeader(String label, Color color, String nominal) {
-    return Column(
-      children: [
-        Text(label, style: const TextStyle(fontSize: 16, color: Colors.white)),
-        const SizedBox(height: 4),
-        Text(nominal,
-            style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white)),
-      ],
+  void _showForm({int? index}) {
+    // Jika index tidak null, isi data untuk edit
+    if (index != null) {
+      namaController.text = pengeluaranList[index]['nama'];
+      jumlahController.text = pengeluaranList[index]['jumlah'];
+    } else {
+      namaController.clear();
+      jumlahController.clear();
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(index == null ? 'Tambah Pengeluaran' : 'Edit Pengeluaran'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: namaController,
+              decoration: const InputDecoration(labelText: 'Nama'),
+            ),
+            TextField(
+              controller: jumlahController,
+              decoration: const InputDecoration(labelText: 'Jumlah (Rp)'),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          if (index != null)
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  pengeluaranList.removeAt(index);
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+            ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              namaController.clear();
+              jumlahController.clear();
+            },
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (namaController.text.isNotEmpty &&
+                  jumlahController.text.isNotEmpty) {
+                setState(() {
+                  if (index == null) {
+                    // Tambah
+                    pengeluaranList.add({
+                      'nama': namaController.text,
+                      'jumlah': jumlahController.text,
+                    });
+                  } else {
+                    // Edit
+                    pengeluaranList[index] = {
+                      'nama': namaController.text,
+                      'jumlah': jumlahController.text,
+                    };
+                  }
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: Text(index == null ? 'Simpan' : 'Update'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -134,22 +203,30 @@ class _KeuanganPageState extends State<KeuanganPage>
                     Expanded(
                       child: ListView(
                         padding: const EdgeInsets.all(16),
-                        children: const [
-                          ListTile(
+                        children: [
+                          const ListTile(
                             leading: Icon(Icons.money_off),
                             title: Text("Gaji Karyawan"),
                             trailing: Text("Rp 23.000,00"),
                           ),
-                          ListTile(
+                          const ListTile(
                             leading: Icon(Icons.lightbulb),
                             title: Text("Listrik"),
                             trailing: Text("Rp 18.000,00"),
                           ),
-                          ListTile(
+                          const ListTile(
                             leading: Icon(Icons.shopping_bag),
                             title: Text("Pewangi"),
                             trailing: Text("Rp 11.000,00"),
                           ),
+                          for (int i = 0; i < pengeluaranList.length; i++)
+                            ListTile(
+                              leading: const Icon(Icons.money_off),
+                              title: Text(pengeluaranList[i]['nama']),
+                              trailing:
+                                  Text("Rp ${pengeluaranList[i]['jumlah']}"),
+                              onTap: () => _showForm(index: i),
+                            ),
                         ],
                       ),
                     ),
@@ -163,11 +240,9 @@ class _KeuanganPageState extends State<KeuanganPage>
       floatingActionButton: isMasuk
           ? null
           : FloatingActionButton(
-              onPressed: () {
-                // TODO: Buka form pengeluaran
-              },
               backgroundColor: Colors.red[700],
               child: const Icon(Icons.add),
+              onPressed: () => _showForm(),
             ),
     );
   }

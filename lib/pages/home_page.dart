@@ -41,7 +41,7 @@ class HomePage extends StatelessWidget {
             buildMenuCard(context, 'KATALOG', Icons.menu_book, KatalogPage()),
             const SizedBox(height: 16),
             buildMenuCard(
-                context, 'PESANAN', Icons.receipt_long, const PesananPage()),
+                context, 'PESANAN', Icons.receipt_long, PesananPage()),
             const SizedBox(height: 16),
             buildMenuCard(
                 context, 'KEUANGAN', Icons.attach_money, const KeuanganPage()),

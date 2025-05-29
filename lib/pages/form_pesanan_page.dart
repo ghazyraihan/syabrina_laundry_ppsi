@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:syabrina_laundry_ppsi/pages/home_page.dart';
+
+
 
 class FormPesananPage extends StatefulWidget {
   final String jenisLayanan;
@@ -18,7 +21,8 @@ class _FormPesananPageState extends State<FormPesananPage> {
   final _tanggalController = TextEditingController();
   final _beratController = TextEditingController();
   final _totalController = TextEditingController();
-  final _statusPembayaranController = TextEditingController();
+
+  String? _selectedStatusPembayaran;
 
   @override
   void initState() {
@@ -32,16 +36,31 @@ class _FormPesananPageState extends State<FormPesananPage> {
     _totalController.text = total.toString();
   }
 
+  Future<void> _pilihTanggal(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      _tanggalController.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+    }
+  }
+
   Future<void> _simpanPesanan() async {
     if (_formKey.currentState!.validate()) {
-      await FirebaseFirestore.instance.collection('pesanan').add({
+      DocumentReference docRef = FirebaseFirestore.instance.collection('pesanan').doc();
+
+      await docRef.set({
+        'idPelanggan': docRef.id,
         'nama': _namaController.text,
         'noTelp': _telpController.text,
         'tanggalMasuk': _tanggalController.text,
         'jenisLayanan': widget.jenisLayanan,
         'berat': _beratController.text,
         'total': _totalController.text,
-        'statusPembayaran': _statusPembayaranController.text,
+        'statusPembayaran': _selectedStatusPembayaran,
         'timestamp': Timestamp.now(),
       });
 
@@ -49,12 +68,20 @@ class _FormPesananPageState extends State<FormPesananPage> {
         SnackBar(content: Text('Pesanan berhasil dikirim')),
       );
 
+      // Kembali ke home page
+Navigator.of(context).pushAndRemoveUntil(
+  MaterialPageRoute(builder: (context) => HomePage()),
+  (Route<dynamic> route) => false,
+);
+
       _namaController.clear();
       _telpController.clear();
       _tanggalController.clear();
       _beratController.clear();
       _totalController.clear();
-      _statusPembayaranController.clear();
+      setState(() {
+        _selectedStatusPembayaran = null;
+      });
     }
   }
 
@@ -112,8 +139,22 @@ class _FormPesananPageState extends State<FormPesananPage> {
                     child: Column(
                       children: [
                         _buildTextField(_namaController, 'Nama Pelanggan'),
-                        _buildTextField(_telpController, 'No. Telp', keyboardType: TextInputType.phone),
-                        _buildTextField(_tanggalController, 'Tanggal Masuk'),
+                        _buildTextField(
+                          _telpController,
+                          'No. Telp',
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Harap isi No. Telp';
+                            if (!RegExp(r'^\d+$').hasMatch(value)) return 'No. Telp hanya boleh angka';
+                            return null;
+                          },
+                        ),
+                        GestureDetector(
+                          onTap: () => _pilihTanggal(context),
+                          child: AbsorbPointer(
+                            child: _buildTextField(_tanggalController, 'Tanggal Masuk'),
+                          ),
+                        ),
                         _buildReadOnlyField(widget.jenisLayanan, 'Jenis Layanan'),
                         Row(
                           children: [
@@ -122,7 +163,28 @@ class _FormPesananPageState extends State<FormPesananPage> {
                             Expanded(child: _buildTextField(_totalController, 'Total (Rp)', keyboardType: TextInputType.number, readOnly: true)),
                           ],
                         ),
-                        _buildTextField(_statusPembayaranController, 'Status Pembayaran'),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedStatusPembayaran,
+                            decoration: InputDecoration(
+                              labelText: 'Status Pembayaran',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            items: ['Lunas', 'Belum Lunas']
+                                .map((status) => DropdownMenuItem(
+                                      value: status,
+                                      child: Text(status),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedStatusPembayaran = value;
+                              });
+                            },
+                            validator: (value) => value == null ? 'Harap pilih status pembayaran' : null,
+                          ),
+                        ),
                         SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
@@ -153,8 +215,13 @@ class _FormPesananPageState extends State<FormPesananPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {TextInputType keyboardType = TextInputType.text, bool readOnly = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -165,7 +232,7 @@ class _FormPesananPageState extends State<FormPesananPage> {
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        validator: (value) => value == null || value.isEmpty ? 'Harap isi $label' : null,
+        validator: validator ?? (value) => value == null || value.isEmpty ? 'Harap isi $label' : null,
       ),
     );
   }

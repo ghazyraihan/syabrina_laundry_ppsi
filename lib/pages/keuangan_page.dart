@@ -145,9 +145,9 @@ class _KeuanganPageState extends State<KeuanganPage>
                 Column(
                   children: [
                     const SizedBox(height: 16),
-                    Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      child: const ListTile(
+                    const Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      child: ListTile(
                         title: Text("Pemasukan bulan ini"),
                         subtitle: Text("Rp 7.000,00"),
                         trailing: Text("Rp 90.000,00"),
@@ -187,9 +187,9 @@ class _KeuanganPageState extends State<KeuanganPage>
                 Column(
                   children: [
                     const SizedBox(height: 16),
-                    Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      child: const ListTile(
+                    const Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      child: ListTile(
                         title: Text("Pengeluaran bulan ini"),
                         subtitle: Text("Rp 7.000,00"),
                         trailing: Text("Rp 90.000,00"),

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PesananPage extends StatelessWidget {
+  const PesananPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Daftar Pesanan'),
-        backgroundColor: Color(0xFF3B82F6),
+        title: const Text('Daftar Pesanan'),
+        backgroundColor: const Color(0xFF3B82F6),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -16,13 +18,13 @@ class PesananPage extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           final pesananList = snapshot.data?.docs ?? [];
 
           if (pesananList.isEmpty) {
-            return Center(child: Text('Belum ada pesanan.'));
+            return const Center(child: Text('Belum ada pesanan.'));
           }
 
           return ListView.builder(
@@ -30,7 +32,7 @@ class PesananPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final data = pesananList[index];
               return Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: ListTile(
                   title: Text(data['nama'] ?? 'Tanpa Nama'),

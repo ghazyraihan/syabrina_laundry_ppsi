@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:syabrina_laundry_ppsi/pages/login_page.dart';
 import 'firebase_options.dart';
-import 'pages/home_page.dart';  // Impor file home_screen
+// Impor file home_screen
 
 void main() async{
   // runApp(const MyApp());

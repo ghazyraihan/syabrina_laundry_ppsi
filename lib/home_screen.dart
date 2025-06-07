@@ -5,17 +5,19 @@ class HomeScreen extends StatelessWidget {
   final TextEditingController nameController = TextEditingController();
   final CollectionReference users = FirebaseFirestore.instance.collection('users');
 
+  HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Simple CRUD'),
+        title: const Text('Simple CRUD'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: users.snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           final data = snapshot.requireData;
@@ -26,7 +28,7 @@ class HomeScreen extends StatelessWidget {
               return ListTile(
                 title: Text(data.docs[index]['name']),
                 trailing: IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () => deleteUser(data.docs[index].id),  // Memanggil deleteUser
                 ),
                 onTap: () {
@@ -34,13 +36,13 @@ class HomeScreen extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (_) => AlertDialog(
-                      title: Text('Update User'),
+                      title: const Text('Update User'),
                       content: TextField(
                         controller: nameController,
                       ),
                       actions: [
                         TextButton(
-                          child: Text('Update'),
+                          child: const Text('Update'),
                           onPressed: () {
                             updateUser(data.docs[index].id, nameController.text);
                             Navigator.pop(context);
@@ -56,19 +58,19 @@ class HomeScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           nameController.clear();
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
-              title: Text('Add User'),
+              title: const Text('Add User'),
               content: TextField(
                 controller: nameController,
               ),
               actions: [
                 TextButton(
-                  child: Text('Add'),
+                  child: const Text('Add'),
                   onPressed: () {
                     addUser(nameController.text);
                     Navigator.pop(context);

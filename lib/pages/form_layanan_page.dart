@@ -6,7 +6,7 @@ class FormLayananPage extends StatefulWidget {
   final String? namaAwal;
   final int? hargaAwal;
 
-  const FormLayananPage({this.id, this.namaAwal, this.hargaAwal});
+  const FormLayananPage({super.key, this.id, this.namaAwal, this.hargaAwal});
 
   @override
   State<FormLayananPage> createState() => _FormLayananPageState();
@@ -60,17 +60,17 @@ class _FormLayananPageState extends State<FormLayananPage> {
             children: [
               TextFormField(
                 controller: _namaController,
-                decoration: InputDecoration(labelText: "Nama Layanan"),
+                decoration: const InputDecoration(labelText: "Nama Layanan"),
               ),
               TextFormField(
                 controller: _hargaController,
-                decoration: InputDecoration(labelText: "Harga per Kg"),
+                decoration: const InputDecoration(labelText: "Harga per Kg"),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _simpanData,
-                child: Text("Simpan"),
+                child: const Text("Simpan"),
               )
             ],
           ),

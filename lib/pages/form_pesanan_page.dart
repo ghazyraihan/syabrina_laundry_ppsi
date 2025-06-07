@@ -8,7 +8,7 @@ class FormPesananPage extends StatefulWidget {
   final String jenisLayanan;
   final int hargaPerKg;
 
-  FormPesananPage({required this.jenisLayanan, required this.hargaPerKg});
+  const FormPesananPage({super.key, required this.jenisLayanan, required this.hargaPerKg});
 
   @override
   _FormPesananPageState createState() => _FormPesananPageState();
@@ -65,12 +65,12 @@ class _FormPesananPageState extends State<FormPesananPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pesanan berhasil dikirim')),
+        const SnackBar(content: Text('Pesanan berhasil dikirim')),
       );
 
       // Kembali ke home page
 Navigator.of(context).pushAndRemoveUntil(
-  MaterialPageRoute(builder: (context) => HomePage()),
+  MaterialPageRoute(builder: (context) => const HomePage()),
   (Route<dynamic> route) => false,
 );
 
@@ -88,12 +88,12 @@ Navigator.of(context).pushAndRemoveUntil(
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF3F4F6),
+      backgroundColor: const Color(0xFFF3F4F6),
       body: Column(
         children: [
           Container(
             padding: const EdgeInsets.only(top: 50, left: 16, right: 16, bottom: 16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Color(0xFF3B82F6),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
@@ -104,11 +104,11 @@ Navigator.of(context).pushAndRemoveUntil(
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
-                SizedBox(width: 8),
-                Text('Pesanan',
+                const SizedBox(width: 8),
+                const Text('Pesanan',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -126,7 +126,7 @@ Navigator.of(context).pushAndRemoveUntil(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black12,
                         blurRadius: 8,
@@ -159,7 +159,7 @@ Navigator.of(context).pushAndRemoveUntil(
                         Row(
                           children: [
                             Expanded(child: _buildTextField(_beratController, 'Berat (kg)', keyboardType: TextInputType.number)),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Expanded(child: _buildTextField(_totalController, 'Total (Rp)', keyboardType: TextInputType.number, readOnly: true)),
                           ],
                         ),
@@ -185,19 +185,19 @@ Navigator.of(context).pushAndRemoveUntil(
                             validator: (value) => value == null ? 'Harap pilih status pembayaran' : null,
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: Color(0xFF3B82F6),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: const Color(0xFF3B82F6),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                             onPressed: _simpanPesanan,
-                            child: Text(
+                            child: const Text(
                               'Simpan Order',
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),

@@ -4,6 +4,8 @@ import 'form_layanan_page.dart';
 import 'form_pesanan_page.dart';
 
 class KatalogPage extends StatelessWidget {
+  const KatalogPage({super.key});
+
   void _hapusLayanan(String id) {
     FirebaseFirestore.instance.collection('katalog').doc(id).delete();
   }
@@ -11,20 +13,20 @@ class KatalogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Katalog Layanan")),
+      appBar: AppBar(title: const Text("Katalog Layanan")),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => FormLayananPage()),
+            MaterialPageRoute(builder: (_) => const FormLayananPage()),
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('katalog').snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
           final items = snapshot.data!.docs;
 
           return ListView.builder(
@@ -42,7 +44,7 @@ class KatalogPage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit),
+                      icon: const Icon(Icons.edit),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -57,7 +59,7 @@ class KatalogPage extends StatelessWidget {
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: () => _hapusLayanan(id),
                     ),
                   ],

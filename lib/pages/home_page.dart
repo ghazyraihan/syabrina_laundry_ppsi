@@ -44,7 +44,7 @@ class HomePage extends StatelessWidget {
                 context, 'PESANAN', Icons.receipt_long, PesananPage()),
             const SizedBox(height: 16),
             buildMenuCard(
-                context, 'KEUANGAN', Icons.attach_money, const KeuanganPage()),
+                context, 'KEUANGAN', Icons.attach_money, KeuanganPage()),
           ],
         ),
       ),

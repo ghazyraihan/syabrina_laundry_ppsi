@@ -1,15 +1,17 @@
-// lib/pages/pengeluaran_page.dart
+// pemasukan_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'form_pengeluaran_page.dart';
+import 'package:syabrina_laundry_ppsi/pages/form_pengeluaran_page.dart';
+// Jika Anda ingin form terpisah untuk pemasukan:
+// import 'form_pemasukan_page.dart'; // Akan dibuat jika diperlukan
 
-class PengeluaranPage extends StatelessWidget {
-  const PengeluaranPage({super.key});
+class PemasukanPage extends StatelessWidget {
+  const PemasukanPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final pengeluaranRef = FirebaseFirestore.instance.collection('pengeluaran');
+    final pemasukanRef = FirebaseFirestore.instance.collection('pemasukan');
     final formatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -17,7 +19,7 @@ class PengeluaranPage extends StatelessWidget {
     );
 
     return StreamBuilder<QuerySnapshot>(
-      stream: pengeluaranRef
+      stream: pemasukanRef
           .orderBy('tanggal', descending: true)
           .snapshots(), // Urutkan berdasarkan tanggal
       builder: (context, snapshot) {
@@ -28,7 +30,7 @@ class PengeluaranPage extends StatelessWidget {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('Belum ada data pengeluaran.'));
+          return const Center(child: Text('Belum ada data pemasukan.'));
         }
 
         final docs = snapshot.data!.docs;
@@ -39,11 +41,26 @@ class PengeluaranPage extends StatelessWidget {
           itemBuilder: (context, index) {
             final data = docs[index];
             final nama = data['nama'] as String;
-            final jumlah =
-                (data['jumlah'] is num) ? (data['jumlah'] as num).toInt() : 0;
+            final jumlah = data['jumlah'] as int;
             final tanggalTimestamp = data['tanggal'] as Timestamp?;
             final tanggal = tanggalTimestamp?.toDate();
             final id = data.id;
+
+            // Ikon hardcode untuk demonstrasi, ganti dengan ikon dinamis jika perlu
+            IconData iconData;
+            switch (nama.toLowerCase()) {
+              case 'cuci kering':
+                iconData = Icons.local_laundry_service;
+                break;
+              case 'setrika':
+                iconData = Icons.iron;
+                break;
+              case 'cuci & setrika':
+                iconData = Icons.dry_cleaning;
+                break;
+              default:
+                iconData = Icons.attach_money;
+            }
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
@@ -51,27 +68,31 @@ class PengeluaranPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10)),
               elevation: 2,
               child: ListTile(
-                leading: const Icon(Icons.money_off, color: Colors.red),
+                leading: Icon(iconData,
+                    color: Colors.blue[700]), // Warna ikon pemasukan
                 title: Text(
                   nama,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 subtitle: tanggal != null
-                    ? Text(DateFormat('dd MMMM yyyy').format(tanggal))
+                    ? Text(DateFormat('dd MMM yyyy').format(tanggal))
                     : null,
                 trailing: Text(
                   formatter.format(jumlah),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.blue[700],
                       fontSize: 16),
                 ),
                 onTap: () {
+                  // Untuk demo, kita bisa panggil form pengeluaran untuk edit juga
+                  // Atau buat form_pemasukan_page.dart terpisah
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => FormPengeluaranPage(
+                        // Bisa diganti FormPemasukanPage jika ada
                         id: id,
                         initialNama: nama,
                         initialJumlah: jumlah,
@@ -84,7 +105,7 @@ class PengeluaranPage extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Hapus Pengeluaran'),
+                      title: const Text('Hapus Pemasukan'),
                       content:
                           Text('Apakah Anda yakin ingin menghapus "$nama"?'),
                       actions: [
@@ -94,7 +115,7 @@ class PengeluaranPage extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await pengeluaranRef.doc(id).delete();
+                            await pemasukanRef.doc(id).delete();
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(

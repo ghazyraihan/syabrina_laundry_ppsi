@@ -3,11 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class PesananPage extends StatelessWidget {
-<<<<<<< HEAD
   const PesananPage({Key? key}) : super(key: key);
-=======
-  const PesananPage({super.key});
->>>>>>> 999bbe47828b6d45ce2a192430bcaf7d9de64e55
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +20,10 @@ class PesananPage extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-<<<<<<< HEAD
           }
 
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-=======
->>>>>>> 999bbe47828b6d45ce2a192430bcaf7d9de64e55
           }
 
           final pesananList = snapshot.data?.docs ?? [];

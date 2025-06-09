@@ -122,7 +122,6 @@ Future<void> _simpanPesanan() async {
           SnackBar(content: Text('Pesanan berhasil disimpan')),
         );
 
-<<<<<<< HEAD
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => HomePage()),
           (Route<dynamic> route) => false,
@@ -143,26 +142,6 @@ Future<void> _simpanPesanan() async {
           SnackBar(content: Text('Gagal menyimpan pesanan: $e')),
         );
       }
-=======
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pesanan berhasil dikirim')),
-      );
-
-      // Kembali ke home page
-Navigator.of(context).pushAndRemoveUntil(
-  MaterialPageRoute(builder: (context) => const HomePage()),
-  (Route<dynamic> route) => false,
-);
-
-      _namaController.clear();
-      _telpController.clear();
-      _tanggalController.clear();
-      _beratController.clear();
-      _totalController.clear();
-      setState(() {
-        _selectedStatusPembayaran = null;
-      });
->>>>>>> 999bbe47828b6d45ce2a192430bcaf7d9de64e55
     }
   }
 

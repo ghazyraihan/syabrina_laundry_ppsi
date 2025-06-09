@@ -85,58 +85,38 @@ class _KeuanganPageState extends State<KeuanganPage>
   }
 
   Future<int> _getTotalByMonth(String collectionName) async {
-  final now = DateTime.now();
-  final startOfMonth = DateTime(now.year, now.month, 1);
-  final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection(collectionName)
-      .where('tanggal', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-      .where('tanggal', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-      .get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection(collectionName)
+        .where('tanggal',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+        .where('tanggal', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
+        .get();
 
-  return snapshot.docs.fold<int>(0, (sum, doc) {
-    final dynamic value = collectionName == 'pesanan'
-        ? doc['total_harga']
-        : doc['jumlah'];
-
-    final int jumlah;
-    if (value is num) {
-      jumlah = value.toInt();
-    } else if (value is String) {
-      jumlah = int.tryParse(value) ?? 0;
-    } else {
-      jumlah = 0;
-    }
-
-    return sum + jumlah;
-  });
-}
-
+    return snapshot.docs.fold<int>(0, (sum, doc) {
+      final dynamic value = collectionName == 'pesanan'
+          ? doc['total_harga']
+          : doc['jumlah'];
+      final int jumlah = (value is num) ? value.toInt() : 0;
+      return sum + jumlah;
+    });
+  }
 
   Future<int> _getTotalOverall(String collectionName) async {
-  final snapshot =
-      await FirebaseFirestore.instance.collection(collectionName).get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection(collectionName).get();
 
-  return snapshot.docs.fold<int>(0, (sum, doc) {
-    final dynamic value = collectionName == 'pesanan'
-        ? doc['total_harga']
-        : doc['jumlah'];
-
-    final int jumlah;
-    if (value is num) {
-      jumlah = value.toInt();
-    } else if (value is String) {
-      jumlah = int.tryParse(value) ?? 0;
-    } else {
-      jumlah = 0;
-    }
-
-    return sum + jumlah;
-  });
-}
-
-
+    return snapshot.docs.fold<int>(0, (sum, doc) {
+      final dynamic value = collectionName == 'pesanan'
+          ? doc['total_harga']
+          : doc['jumlah'];
+      final int jumlah = (value is num) ? value.toInt() : 0;
+      return sum + jumlah;
+    });
+  }
 
   List<double> _generateGraphData(int total, {int points = 5}) {
     if (total == 0) {
@@ -234,7 +214,6 @@ class _KeuanganPageState extends State<KeuanganPage>
             ),
             child: TabBar(
               controller: _tabController,
-<<<<<<< HEAD
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
@@ -246,100 +225,6 @@ class _KeuanganPageState extends State<KeuanganPage>
               tabs: const [
                 Tab(text: "Masuk"),
                 Tab(text: "Keluar"),
-=======
-              children: [
-                // ================= Tab Masuk =================
-                Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    const Card(
-                      margin: EdgeInsets.symmetric(horizontal: 16),
-                      child: ListTile(
-                        title: Text("Pemasukan bulan ini"),
-                        subtitle: Text("Rp 7.000,00"),
-                        trailing: Text("Rp 90.000,00"),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Pemasukan",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.all(16),
-                        children: const [
-                          ListTile(
-                            leading: Icon(Icons.local_laundry_service),
-                            title: Text("CUCI KERING"),
-                            trailing: Text("Rp 12.000,00"),
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.local_laundry_service),
-                            title: Text("SETRIKA"),
-                            trailing: Text("Rp 14.000,00"),
-                          ),
-                          ListTile(
-                            leading: Icon(Icons.local_laundry_service),
-                            title: Text("CUCI & SETRIKA"),
-                            trailing: Text("Rp 21.000,00"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                // ================= Tab Keluar =================
-                Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    const Card(
-                      margin: EdgeInsets.symmetric(horizontal: 16),
-                      child: ListTile(
-                        title: Text("Pengeluaran bulan ini"),
-                        subtitle: Text("Rp 7.000,00"),
-                        trailing: Text("Rp 90.000,00"),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "Pengeluaran",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.all(16),
-                        children: [
-                          const ListTile(
-                            leading: Icon(Icons.money_off),
-                            title: Text("Gaji Karyawan"),
-                            trailing: Text("Rp 23.000,00"),
-                          ),
-                          const ListTile(
-                            leading: Icon(Icons.lightbulb),
-                            title: Text("Listrik"),
-                            trailing: Text("Rp 18.000,00"),
-                          ),
-                          const ListTile(
-                            leading: Icon(Icons.shopping_bag),
-                            title: Text("Pewangi"),
-                            trailing: Text("Rp 11.000,00"),
-                          ),
-                          for (int i = 0; i < pengeluaranList.length; i++)
-                            ListTile(
-                              leading: const Icon(Icons.money_off),
-                              title: Text(pengeluaranList[i]['nama']),
-                              trailing:
-                                  Text("Rp ${pengeluaranList[i]['jumlah']}"),
-                              onTap: () => _showForm(index: i),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
->>>>>>> 999bbe47828b6d45ce2a192430bcaf7d9de64e55
               ],
             ),
           ),
@@ -401,7 +286,7 @@ class _KeuanganPageState extends State<KeuanganPage>
           ),
           const SizedBox(height: 16),
           Text(
-            isMasuk ? "Pemasukan" : "Pengeluaran",
+            isMasuk ? "Riwayat Pemasukan" : "Riwayat Pengeluaran",
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,

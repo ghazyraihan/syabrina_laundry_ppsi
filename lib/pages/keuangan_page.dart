@@ -234,6 +234,7 @@ class _KeuanganPageState extends State<KeuanganPage>
             ),
             child: TabBar(
               controller: _tabController,
+<<<<<<< HEAD
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
@@ -245,6 +246,100 @@ class _KeuanganPageState extends State<KeuanganPage>
               tabs: const [
                 Tab(text: "Masuk"),
                 Tab(text: "Keluar"),
+=======
+              children: [
+                // ================= Tab Masuk =================
+                Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    const Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      child: ListTile(
+                        title: Text("Pemasukan bulan ini"),
+                        subtitle: Text("Rp 7.000,00"),
+                        trailing: Text("Rp 90.000,00"),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Pemasukan",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: const [
+                          ListTile(
+                            leading: Icon(Icons.local_laundry_service),
+                            title: Text("CUCI KERING"),
+                            trailing: Text("Rp 12.000,00"),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.local_laundry_service),
+                            title: Text("SETRIKA"),
+                            trailing: Text("Rp 14.000,00"),
+                          ),
+                          ListTile(
+                            leading: Icon(Icons.local_laundry_service),
+                            title: Text("CUCI & SETRIKA"),
+                            trailing: Text("Rp 21.000,00"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // ================= Tab Keluar =================
+                Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    const Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16),
+                      child: ListTile(
+                        title: Text("Pengeluaran bulan ini"),
+                        subtitle: Text("Rp 7.000,00"),
+                        trailing: Text("Rp 90.000,00"),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Pengeluaran",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          const ListTile(
+                            leading: Icon(Icons.money_off),
+                            title: Text("Gaji Karyawan"),
+                            trailing: Text("Rp 23.000,00"),
+                          ),
+                          const ListTile(
+                            leading: Icon(Icons.lightbulb),
+                            title: Text("Listrik"),
+                            trailing: Text("Rp 18.000,00"),
+                          ),
+                          const ListTile(
+                            leading: Icon(Icons.shopping_bag),
+                            title: Text("Pewangi"),
+                            trailing: Text("Rp 11.000,00"),
+                          ),
+                          for (int i = 0; i < pengeluaranList.length; i++)
+                            ListTile(
+                              leading: const Icon(Icons.money_off),
+                              title: Text(pengeluaranList[i]['nama']),
+                              trailing:
+                                  Text("Rp ${pengeluaranList[i]['jumlah']}"),
+                              onTap: () => _showForm(index: i),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+>>>>>>> 999bbe47828b6d45ce2a192430bcaf7d9de64e55
               ],
             ),
           ),

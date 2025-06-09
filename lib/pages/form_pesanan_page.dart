@@ -48,40 +48,100 @@ class _FormPesananPageState extends State<FormPesananPage> {
     }
   }
 
-  Future<void> _simpanPesanan() async {
+//   Future<void> _simpanPesanan() async {
+//     if (_formKey.currentState!.validate()) {
+//       DocumentReference docRef = FirebaseFirestore.instance.collection('pesanan').doc();
+
+//       // await docRef.set({
+//       //   'idPelanggan': docRef.id,
+//       //   'nama': _namaController.text,
+//       //   'noTelp': _telpController.text,
+//       //   'tanggalMasuk': _tanggalController.text,
+//       //   'jenisLayanan': widget.jenisLayanan,
+//       //   'berat': _beratController.text,
+//       //   'total': _totalController.text,
+//       //   'statusPembayaran': _selectedStatusPembayaran,
+//       //   'timestamp': Timestamp.now(),
+//       // });
+
+//       await docRef.set({
+//   'idPelanggan': docRef.id,
+//   'nama': _namaController.text,
+//   'noTelp': _telpController.text,
+//   'tanggalMasuk': _tanggalController.text,
+//   'jenisLayanan': widget.jenisLayanan,
+//   'berat': int.tryParse(_beratController.text) ?? 0, // jadi int
+//   'total': int.tryParse(_totalController.text) ?? 0, // jadi int
+//   'statusPembayaran': _selectedStatusPembayaran,
+//   'timestamp': Timestamp.now(),
+// });
+
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Pesanan berhasil dikirim')),
+//       );
+
+//       // Kembali ke home page
+// Navigator.of(context).pushAndRemoveUntil(
+//   MaterialPageRoute(builder: (context) => HomePage()),
+//   (Route<dynamic> route) => false,
+// );
+
+//       _namaController.clear();
+//       _telpController.clear();
+//       _tanggalController.clear();
+//       _beratController.clear();
+//       _totalController.clear();
+//       setState(() {
+//         _selectedStatusPembayaran = null;
+//       });
+//     }
+//   }
+
+Future<void> _simpanPesanan() async {
     if (_formKey.currentState!.validate()) {
-      DocumentReference docRef = FirebaseFirestore.instance.collection('pesanan').doc();
+      try {
+        DocumentReference docRef = FirebaseFirestore.instance.collection('pesanan').doc();
+        
+        // Convert string tanggal ke DateTime
+        DateTime tanggalMasuk = DateTime.parse(_tanggalController.text);
+        
+        await docRef.set({
+          'idPelanggan': docRef.id,
+          'nama_pelanggan': _namaController.text, // disesuaikan dengan field di halaman keuangan
+          'noTelp': _telpController.text,
+          'tanggal': Timestamp.fromDate(tanggalMasuk), // field untuk query di halaman keuangan
+          'tanggalMasuk': _tanggalController.text, // untuk display
+          'jenisLayanan': widget.jenisLayanan,
+          'berat': int.tryParse(_beratController.text) ?? 0,
+          'total_harga': int.tryParse(_totalController.text) ?? 0, // disesuaikan dengan field di halaman keuangan
+          'statusPembayaran': _selectedStatusPembayaran,
+          'timestamp': Timestamp.now(),
+        });
 
-      await docRef.set({
-        'idPelanggan': docRef.id,
-        'nama': _namaController.text,
-        'noTelp': _telpController.text,
-        'tanggalMasuk': _tanggalController.text,
-        'jenisLayanan': widget.jenisLayanan,
-        'berat': _beratController.text,
-        'total': _totalController.text,
-        'statusPembayaran': _selectedStatusPembayaran,
-        'timestamp': Timestamp.now(),
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pesanan berhasil disimpan')),
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pesanan berhasil dikirim')),
-      );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => HomePage()),
+          (Route<dynamic> route) => false,
+        );
 
-      // Kembali ke home page
-Navigator.of(context).pushAndRemoveUntil(
-  MaterialPageRoute(builder: (context) => const HomePage()),
-  (Route<dynamic> route) => false,
-);
-
-      _namaController.clear();
-      _telpController.clear();
-      _tanggalController.clear();
-      _beratController.clear();
-      _totalController.clear();
-      setState(() {
-        _selectedStatusPembayaran = null;
-      });
+        // Reset form
+        _namaController.clear();
+        _telpController.clear();
+        _tanggalController.clear();
+        _beratController.clear();
+        _totalController.clear();
+        setState(() {
+          _selectedStatusPembayaran = null;
+        });
+      } catch (e) {
+        print('Error saat menyimpan pesanan: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan pesanan: $e')),
+        );
+      }
     }
   }
 

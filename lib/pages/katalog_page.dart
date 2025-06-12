@@ -26,6 +26,9 @@ class _KatalogPageState extends State<KatalogPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
             child: const Text("Hapus"),
           ),
         ],
@@ -66,7 +69,7 @@ class _KatalogPageState extends State<KatalogPage> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Cari',
+                hintText: 'Cari layanan...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
@@ -88,7 +91,7 @@ class _KatalogPageState extends State<KatalogPage> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Category",
+                "Kategori Layanan",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ),
@@ -107,21 +110,20 @@ class _KatalogPageState extends State<KatalogPage> {
                 }).toList();
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
                   child: GridView.builder(
                     itemCount: items.length,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.95,
                     ),
                     itemBuilder: (context, index) {
                       final layanan = items[index];
                       final id = layanan.id;
                       final nama = layanan['nama'];
                       final harga = layanan['harga'];
-                      final imagePath = _getImageForLayanan(nama);
 
                       return GestureDetector(
                         onTap: () {
@@ -135,62 +137,63 @@ class _KatalogPageState extends State<KatalogPage> {
                             ),
                           );
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
+                        child: Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
                           ),
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: Image.asset(
-                                  imagePath,
-                                  fit: BoxFit.contain,
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Icon(
+                                  Icons.local_laundry_service,
+                                  size: 48,
+                                  color: Colors.blueAccent,
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                nama,
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              Text(
-                                'Rp $harga /kg',
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => FormLayananPage(
-                                            id: id,
-                                            namaAwal: nama,
-                                            hargaAwal: harga,
+                                Text(
+                                  nama,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'Rp $harga /kg',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => FormLayananPage(
+                                              id: id,
+                                              namaAwal: nama,
+                                              hargaAwal: harga,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                                    onPressed: () => _hapusLayanan(id),
-                                  ),
-                                ],
-                              )
-                            ],
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                      onPressed: () => _hapusLayanan(id),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -203,14 +206,5 @@ class _KatalogPageState extends State<KatalogPage> {
         ],
       ),
     );
-  }
-
-  String _getImageForLayanan(String nama) {
-    final name = nama.toLowerCase();
-    if (name.contains('basic')) return 'assets/images/basic_laundry.png';
-    if (name.contains('kering')) return 'assets/images/cuci_kering.png';
-    if (name.contains('setrika') && name.contains('saja')) return 'assets/images/setrika_saja.png';
-    if (name.contains('setrika')) return 'assets/images/cuci_setrika.png';
-    return 'assets/images/default.png';
   }
 }

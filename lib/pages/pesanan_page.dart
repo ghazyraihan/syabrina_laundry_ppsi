@@ -80,9 +80,10 @@ class _PesananPageState extends State<PesananPage> {
               String tanggalFormatted = '-';
               if (data['timestamp'] != null && data['timestamp'] is Timestamp) {
                 final tanggal = (data['timestamp'] as Timestamp).toDate();
-                tanggalFormatted = DateFormat('dd MMM yyyy HH:mm').format(tanggal);
-              }
 
+                tanggalFormatted =
+                    DateFormat('dd MMM yyyy HH:mm').format(tanggal);
+              }
               final isLunas = data['statusPembayaran'] == 'Lunas';
 
               return Card(
@@ -90,7 +91,10 @@ class _PesananPageState extends State<PesananPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isLunas ? Colors.green.shade200 : Colors.orange.shade200,
+
+                    color: isLunas
+                        ? Colors.green.shade200
+                        : Colors.orange.shade200,
                     width: 1.5,
                   ),
                 ),
@@ -131,7 +135,9 @@ class _PesananPageState extends State<PesananPage> {
                                 Navigator.of(context).pop(); // Tutup dialog
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isLunas ? Colors.orange : Colors.green,
+
+                                backgroundColor:
+                                    isLunas ? Colors.orange : Colors.green,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -226,4 +232,5 @@ class _PesananPageState extends State<PesananPage> {
       ),
     );
   }
+
 }

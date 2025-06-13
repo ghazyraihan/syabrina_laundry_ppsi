@@ -109,7 +109,7 @@ class _FormPengeluaranPageState extends State<FormPengeluaranPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Pengeluaran' : 'Tambah Pengeluaran'),
-        backgroundColor: Theme.of(context).primaryColor, // Warna AppBar
+        backgroundColor: Colors.red, // Ubah warna AppBar menjadi merah
         foregroundColor: Colors.white, // Warna teks AppBar
       ),
       body: Padding(
@@ -117,19 +117,22 @@ class _FormPengeluaranPageState extends State<FormPengeluaranPage> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch, // Agar elemen mengisi lebar
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch, // Agar elemen mengisi lebar
             children: [
               TextFormField(
                 controller: _namaController,
                 decoration: InputDecoration(
                   labelText: 'Nama Pengeluaran',
-                  border: OutlineInputBorder( // Border pada input field
+                  border: OutlineInputBorder(
+                    // Border pada input field
                     borderRadius: BorderRadius.circular(10),
                   ),
                   prefixIcon: const Icon(Icons.description), // Ikon deskripsi
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Nama pengeluaran wajib diisi' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Nama pengeluaran wajib diisi'
+                    : null,
               ),
               const SizedBox(height: 15), // Spasi antar field
               TextFormField(
@@ -173,11 +176,13 @@ class _FormPengeluaranPageState extends State<FormPengeluaranPage> {
               ElevatedButton(
                 onPressed: _simpanData,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor, // Warna tombol
+                  backgroundColor: Colors.red, // Ubah warna tombol menjadi merah
                   foregroundColor: Colors.white, // Warna teks tombol
-                  padding: const EdgeInsets.symmetric(vertical: 15), // Padding tombol
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15), // Padding tombol
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // Sudut melengkung pada tombol
+                    borderRadius:
+                        BorderRadius.circular(10), // Sudut melengkung pada tombol
                   ),
                   elevation: 5, // Efek bayangan pada tombol
                 ),

@@ -6,7 +6,7 @@ import 'keuangan_page.dart';
 import 'profile.dart'; // Pastikan path ini benar
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
             const Text('Halo!', style: TextStyle(fontSize: 16, color: Colors.white70)), // Tambahkan warna teks
             Text(
               _userName, // Menggunakan nama pengguna dari Firebase
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white70, // Tambahkan warna teks
@@ -82,15 +82,15 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             // Kartu untuk Katalog
-            buildMenuCard(context, 'KATALOG', Icons.menu_book, KatalogPage()),
+            buildMenuCard(context, 'KATALOG', Icons.menu_book, const KatalogPage()),
             const SizedBox(height: 16),
             // Kartu untuk Pesanan
             buildMenuCard(
-                context, 'PESANAN', Icons.receipt_long, PesananPage()),
+                context, 'PESANAN', Icons.receipt_long, const PesananPage()),
             const SizedBox(height: 16),
             // Kartu untuk Keuangan
             buildMenuCard(
-                context, 'KEUANGAN', Icons.attach_money, KeuanganPage()),
+                context, 'KEUANGAN', Icons.attach_money, const KeuanganPage()),
           ],
         ),
       ),

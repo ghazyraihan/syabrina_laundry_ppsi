@@ -116,8 +116,9 @@ class _FormLayananPageState extends State<FormLayananPage> {
                 ),
                 validator: (value) {
                   final num = int.tryParse(value ?? '');
-                  if (num == null || num <= 0)
+                  if (num == null || num <= 0) {
                     return 'Masukkan harga yang valid';
+                  }
                   return null;
                 },
               ),

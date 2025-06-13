@@ -119,11 +119,11 @@ Future<void> _simpanPesanan() async {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pesanan berhasil disimpan')),
+          const SnackBar(content: Text('Pesanan berhasil disimpan')),
         );
 
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => const HomePage()),
           (Route<dynamic> route) => false,
         );
 

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class PesananPage extends StatefulWidget {
-  const PesananPage({Key? key}) : super(key: key);
+  const PesananPage({super.key});
 
   @override
   State<PesananPage> createState() => _PesananPageState();

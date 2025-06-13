@@ -24,12 +24,9 @@ class _KatalogPageState extends State<KatalogPage> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text("Batal"),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text("Hapus"),
+            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -54,7 +51,7 @@ class _KatalogPageState extends State<KatalogPage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
         onPressed: () {
           Navigator.push(
             context,
@@ -70,10 +67,9 @@ class _KatalogPageState extends State<KatalogPage> {
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Cari layanan...',
-                prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
                   borderSide: BorderSide.none,
@@ -91,7 +87,7 @@ class _KatalogPageState extends State<KatalogPage> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Kategori Layanan",
+                "Daftar Layanan",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ),
@@ -109,96 +105,107 @@ class _KatalogPageState extends State<KatalogPage> {
                   return name.contains(query);
                 }).toList();
 
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: GridView.builder(
-                    itemCount: items.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.95,
-                    ),
-                    itemBuilder: (context, index) {
-                      final layanan = items[index];
-                      final id = layanan.id;
-                      final nama = layanan['nama'];
-                      final harga = layanan['harga'];
+                if (items.isEmpty) {
+                  return const Center(
+                    child: Text("Tidak ada layanan ditemukan"),
+                  );
+                }
 
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => FormPesananPage(
-                                jenisLayanan: nama,
-                                hargaPerKg: harga,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Card(
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          color: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Icon(
-                                  Icons.local_laundry_service,
-                                  size: 48,
-                                  color: Colors.blueAccent,
-                                ),
-                                Text(
-                                  nama,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  'Rp $harga /kg',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => FormLayananPage(
-                                              id: id,
-                                              namaAwal: nama,
-                                              hargaAwal: harga,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                                      onPressed: () => _hapusLayanan(id),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final layanan = items[index];
+                    final id = layanan.id;
+                    final nama = layanan['nama'];
+                    final harga = layanan['harga'];
+
+                   return Container(
+  margin: const EdgeInsets.only(bottom: 12),
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(12),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black12,
+        blurRadius: 4,
+        offset: Offset(0, 2),
+      ),
+    ],
+  ),
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      // Info layanan (kiri, center vertikal)
+      Expanded(
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FormPesananPage(
+                  jenisLayanan: nama,
+                  hargaPerKg: harga,
+                ),
+              ),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                nama,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Rp $harga /kg',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      // Tombol edit & hapus (kanan)
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue),
+            tooltip: 'Edit',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FormLayananPage(
+                    id: id,
+                    namaAwal: nama,
+                    hargaAwal: harga,
                   ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            tooltip: 'Hapus',
+            onPressed: () => _hapusLayanan(id),
+          ),
+        ],
+      ),
+    ],
+  ),
+);
+
+                  },
                 );
               },
             ),

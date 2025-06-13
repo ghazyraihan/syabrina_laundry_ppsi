@@ -109,46 +109,82 @@ class _FormPengeluaranPageState extends State<FormPengeluaranPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Pengeluaran' : 'Tambah Pengeluaran'),
+        backgroundColor: Theme.of(context).primaryColor, // Warna AppBar
+        foregroundColor: Colors.white, // Warna teks AppBar
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20), // Tambah padding keseluruhan
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch, // Agar elemen mengisi lebar
             children: [
               TextFormField(
                 controller: _namaController,
-                decoration:
-                    const InputDecoration(labelText: 'Nama Pengeluaran'),
+                decoration: InputDecoration(
+                  labelText: 'Nama Pengeluaran',
+                  border: OutlineInputBorder( // Border pada input field
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  prefixIcon: const Icon(Icons.description), // Ikon deskripsi
+                ),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Wajib diisi' : null,
+                    value == null || value.isEmpty ? 'Nama pengeluaran wajib diisi' : null,
               ),
+              const SizedBox(height: 15), // Spasi antar field
               TextFormField(
                 controller: _jumlahController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Jumlah (Rp)'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Wajib diisi' : null,
+                decoration: InputDecoration(
+                  labelText: 'Jumlah (Rp)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  prefixIcon: const Icon(Icons.attach_money), // Ikon uang
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Jumlah wajib diisi';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Masukkan angka yang valid';
+                  }
+                  return null;
+                },
               ),
-              // >>>>>> TAMBAH FIELD TANGGAL DI SINI <<<<<<
+              const SizedBox(height: 15), // Spasi antar field
               TextFormField(
                 controller: _tanggalController,
                 readOnly: true, // Membuat field tidak bisa diketik langsung
                 onTap: () =>
                     _selectDate(context), // Panggil date picker saat ditekan
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Tanggal Pengeluaran',
-                  suffixIcon: Icon(Icons.calendar_today), // Ikon kalender
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  suffixIcon: const Icon(Icons.calendar_today), // Ikon kalender
                 ),
                 validator: (value) => value == null || value.isEmpty
                     ? 'Tanggal wajib diisi'
                     : null,
               ),
-              // >>>>>> AKHIR PENAMBAHAN FIELD TANGGAL <<<<<<
-              const SizedBox(height: 20),
+              const SizedBox(height: 30), // Spasi sebelum tombol
               ElevatedButton(
                 onPressed: _simpanData,
-                child: Text(isEdit ? 'Update' : 'Simpan'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor, // Warna tombol
+                  foregroundColor: Colors.white, // Warna teks tombol
+                  padding: const EdgeInsets.symmetric(vertical: 15), // Padding tombol
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10), // Sudut melengkung pada tombol
+                  ),
+                  elevation: 5, // Efek bayangan pada tombol
+                ),
+                child: Text(
+                  isEdit ? 'Update Pengeluaran' : 'Simpan Pengeluaran',
+                  style: const TextStyle(fontSize: 18), // Ukuran teks tombol
+                ),
               ),
             ],
           ),

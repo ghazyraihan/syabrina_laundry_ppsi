@@ -83,14 +83,15 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Kartu untuk Katalog
             buildMenuCard(context, 'KATALOG', Icons.menu_book, KatalogPage()),
-            const SizedBox(height: 16),
+            const SizedBox(height: 30),
             // Kartu untuk Pesanan
             buildMenuCard(
                 context, 'PESANAN', Icons.receipt_long, PesananPage()),
-            const SizedBox(height: 16),
+            const SizedBox(height: 30),
             // Kartu untuk Keuangan
             buildMenuCard(
                 context, 'KEUANGAN', Icons.attach_money, KeuanganPage()),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -100,8 +101,8 @@ class _HomePageState extends State<HomePage> {
   Widget buildMenuCard(BuildContext context, String title, IconData icon,
       Widget destinationPage) {
     return 
-    //Expanded( // <--- Tambahkan Expanded di sini agar kartu mengisi ruang
-      //child: 
+    Expanded( // <--- Tambahkan Expanded di sini agar kartu mengisi ruang
+      child: 
       GestureDetector(
         onTap: () async { // <--- Tambahkan async di sini jika mau menangani hasil balik
           // Jika Anda ingin _loadUserName() dipanggil setelah kembali dari halaman tujuan,
@@ -139,7 +140,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-      //),
+      ),
     );
   }
 }

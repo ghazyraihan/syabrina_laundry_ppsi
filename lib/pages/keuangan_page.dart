@@ -6,8 +6,6 @@ import 'pemasukan_page.dart'; // Pastikan path ini benar
 import 'pengeluaran_page.dart'; // Pastikan path ini benar
 import 'form_pengeluaran_page.dart'; // Pastikan path ini benar
 
-// Kelas _LineGraphPainter (yang digunakan untuk grafik) sudah dihapus karena tidak digunakan lagi.
-
 class KeuanganPage extends StatefulWidget {
   const KeuanganPage({super.key});
 
@@ -51,14 +49,20 @@ class _KeuanganPageState extends State<KeuanganPage>
   // Digunakan untuk menghitung total pemasukan atau pengeluaran
   int _calculateTotal(QuerySnapshot snapshot, String collectionName) {
     return snapshot.docs.fold<int>(0, (sum, doc) {
-      // Ambil nilai dari field, jika field tidak ada, defaultkan ke null
-      final dynamic value = collectionName == 'pesanan'
-          ? doc.data() is Map<String, dynamic>
-              ? (doc.data() as Map<String, dynamic>)['total_harga']
-              : null
-          : doc.data() is Map<String, dynamic>
-              ? (doc.data() as Map<String, dynamic>)['jumlah']
-              : null;
+      // Ambil data dokumen sebagai Map<String, dynamic> atau null jika tidak ada
+      final data = doc.data() as Map<String, dynamic>?;
+
+      // Jika data null, lewati dokumen ini dan kembalikan sum saat ini
+      if (data == null) {
+        return sum;
+      }
+
+      dynamic value;
+      if (collectionName == 'pesanan') {
+        value = data['total_harga'];
+      } else {
+        value = data['jumlah'];
+      }
 
       // Pastikan nilai adalah numerik sebelum konversi ke int.
       // Jika value null atau bukan num, maka jumlah dianggap 0.
@@ -66,8 +70,6 @@ class _KeuanganPageState extends State<KeuanganPage>
       return sum + jumlah;
     });
   }
-
-  // Fungsi _generateGraphData (yang digunakan untuk grafik) sudah dihapus karena tidak digunakan lagi.
 
   @override
   Widget build(BuildContext context) {
@@ -81,25 +83,41 @@ class _KeuanganPageState extends State<KeuanganPage>
     final totalTextColor =
         isMasuk ? Colors.green.shade800 : Colors.red.shade800;
 
-    // Stream untuk total keseluruhan (tanpa filter tanggal)
-    final Stream<QuerySnapshot> overallStream = FirebaseFirestore.instance
-        .collection(isMasuk
-            ? 'pesanan'
-            : 'pengeluaran') // Pilih koleksi berdasarkan tab
-        .snapshots(); // Gunakan snapshots() untuk update real-time
+    // --- Stream untuk total keseluruhan (hanya yang Lunas jika Pemasukan) ---
+    // Definisikan Query dasar
+    Query overallQuery = FirebaseFirestore.instance
+        .collection(isMasuk ? 'pesanan' : 'pengeluaran');
+    // Tambahkan filter statusPembayaran hanya jika ini adalah tab Pemasukan
+    if (isMasuk) {
+      overallQuery = overallQuery.where('statusPembayaran', isEqualTo: 'Lunas');
+    }
+    final Stream<QuerySnapshot> overallStream = overallQuery.snapshots();
 
-    // Stream untuk total bulan ini (dengan filter tanggal)
-    // Gunakan waktu saat ini untuk filter bulan
-    final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    // --- Stream untuk total bulan ini (hanya yang Lunas jika Pemasukan) ---
+    final now = DateTime.now(); // Menggunakan waktu saat ini
 
-    final Stream<QuerySnapshot> monthStream = FirebaseFirestore.instance
-        .collection(isMasuk ? 'pesanan' : 'pengeluaran')
+    // *** PERBAIKAN PENTING DI SINI ***
+    // Pastikan startOfMonth tepat di awal hari pertama bulan
+    final startOfMonth = DateTime(now.year, now.month, 1, 0, 0, 0); // Jam 00:00:00
+
+    // Pastikan endOfMonth tepat di akhir hari terakhir bulan
+    // Menggunakan DateTime(year, month + 1, 0) akan memberikan tanggal terakhir bulan sebelumnya.
+    // Kemudian set jam, menit, detik, milidetik, mikrodik detik ke nilai maksimum.
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999, 999);
+
+    // Definisikan Query dasar
+    Query monthQuery = FirebaseFirestore.instance
+        .collection(isMasuk ? 'pesanan' : 'pengeluaran');
+    // Tambahkan filter tanggal
+    monthQuery = monthQuery
         .where('tanggal',
             isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-        .where('tanggal', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-        .snapshots(); // Gunakan snapshots() untuk update real-time
+        .where('tanggal', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth));
+    // Tambahkan filter statusPembayaran hanya jika ini adalah tab Pemasukan
+    if (isMasuk) {
+      monthQuery = monthQuery.where('statusPembayaran', isEqualTo: 'Lunas');
+    }
+    final Stream<QuerySnapshot> monthStream = monthQuery.snapshots();
 
     return Scaffold(
       backgroundColor: appBarColor,
@@ -121,9 +139,8 @@ class _KeuanganPageState extends State<KeuanganPage>
       body: Column(
         children: [
           // Bagian untuk menampilkan TOTAL KESELURUHAN (atas)
-          // Menggunakan StreamBuilder agar otomatis update
           StreamBuilder<QuerySnapshot>(
-            stream: overallStream, // Stream data keseluruhan
+            stream: overallStream,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
@@ -131,12 +148,12 @@ class _KeuanganPageState extends State<KeuanganPage>
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              // Hitung total dari snapshot data yang diterima
               final totalOverall = _calculateTotal(
                   snapshot.data!, isMasuk ? 'pesanan' : 'pengeluaran');
 
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -163,8 +180,7 @@ class _KeuanganPageState extends State<KeuanganPage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      formatter
-                          .format(totalOverall), // Tampilkan total keseluruhan
+                      formatter.format(totalOverall),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -202,9 +218,8 @@ class _KeuanganPageState extends State<KeuanganPage>
           ),
           const SizedBox(height: 16),
           // Bagian untuk menampilkan TOTAL BULAN INI (bawah)
-          // Menggunakan StreamBuilder agar otomatis update dan tampilan ringkas
           StreamBuilder<QuerySnapshot>(
-            stream: monthStream, // Stream data bulan ini
+            stream: monthStream,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
@@ -212,7 +227,6 @@ class _KeuanganPageState extends State<KeuanganPage>
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              // Hitung total dari snapshot data yang diterima
               final totalMonth = _calculateTotal(
                   snapshot.data!, isMasuk ? 'pesanan' : 'pengeluaran');
 
@@ -224,12 +238,10 @@ class _KeuanganPageState extends State<KeuanganPage>
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: Row(
-                  // Perubahan: Menggunakan Row untuk mensejajarkan elemen
-                  mainAxisAlignment: MainAxisAlignment
-                      .spaceBetween, // Untuk meratakan judul dan total ke ujung
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isMasuk ? "pemasukan bulan ini" : "Pengeluaran Bulan Ini",
+                      isMasuk ? "pemasukan bulan ini" : "pengeluaran bulan ini",
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[800],
@@ -237,15 +249,13 @@ class _KeuanganPageState extends State<KeuanganPage>
                       ),
                     ),
                     Text(
-                      formatter.format(totalMonth), // Tampilkan total bulanan
+                      formatter.format(totalMonth),
                       style: TextStyle(
-                        fontSize:
-                            24, // Anda bisa ubah ukuran font ini jika ingin lebih kecil
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: totalTextColor,
                       ),
                     ),
-                    // Garis grafik yang sebelumnya ada di sini telah dihapus.
                   ],
                 ),
               );
@@ -269,25 +279,22 @@ class _KeuanganPageState extends State<KeuanganPage>
               child: TabBarView(
                 controller: _tabController,
                 children: const [
-                  PemasukanPage(), // Halaman riwayat pemasukan
-                  PengeluaranPage(), // Halaman riwayat pengeluaran
+                  PemasukanPage(),
+                  PengeluaranPage(),
                 ],
               ),
             ),
           ),
         ],
       ),
-      // Floating Action Button untuk menambah pengeluaran (hanya muncul di tab "Keluar")
       floatingActionButton: isMasuk
-          ? null // Tidak ada FAB di tab pemasukan
+          ? null
           : FloatingActionButton(
               backgroundColor: Colors.red[700],
               onPressed: () {
-                // Navigasi ke FormPengeluaranPage saat FAB ditekan
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const FormPengeluaranPage()),
+                  MaterialPageRoute(builder: (_) => const FormPengeluaranPage()),
                 );
               },
               child: const Icon(Icons.add, color: Colors.white),

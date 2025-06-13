@@ -10,6 +10,13 @@ class PesananPage extends StatefulWidget {
 }
 
 class _PesananPageState extends State<PesananPage> {
+  // Variabel untuk filter
+  DateTimeRange? selectedDateRange;
+  String layananFilter = 'Semua';
+  String pembayaranFilter = 'Semua';
+  String pengerjaanFilter = 'Semua';
+  String searchQuery = '';
+
   // Fungsi untuk memperbarui status pembayaran di Firebase
   Future<void> _updatePaymentStatus(String docId, bool isPaid) async {
     try {
@@ -143,367 +150,523 @@ class _PesananPageState extends State<PesananPage> {
     );
   }
 
+  // Helper function untuk menampilkan dialog konfirmasi status pengerjaan
+  void _showWorkStatusDialog(String docId, String currentStatus, String? customerName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Text(
+            'Ubah Status Pengerjaan ${customerName ?? ''}',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (currentStatus != 'Antrian')
+                ListTile(
+                  title: const Text('Antrian'),
+                  onTap: () {
+                    _updateWorkStatus(docId, 'Antrian');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              if (currentStatus != 'Sedang Dikerjakan')
+                ListTile(
+                  title: const Text('Sedang Dikerjakan'),
+                  onTap: () {
+                    _updateWorkStatus(docId, 'Sedang Dikerjakan');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              if (currentStatus != 'Selesai')
+                ListTile(
+                  title: const Text('Selesai'),
+                  onTap: () {
+                    _updateWorkStatus(docId, 'Selesai');
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ListTile(
+                title: const Text('Batalkan Pesanan', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _cancelOrder(docId, customerName);
+                },
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Tutup'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Fungsi untuk memilih rentang tanggal
+  void _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2100),
+      initialDateRange: selectedDateRange,
+    );
+    if (picked != null) {
+      setState(() => selectedDateRange = picked);
+    }
+  }
+
+  // Helper untuk memeriksa apakah tanggal dalam rentang yang dipilih
+  bool _isWithinRange(Timestamp? ts) {
+    if (ts == null || selectedDateRange == null) return true;
+    final d = ts.toDate();
+    // Tambahkan 1 hari ke endDate agar mencakup seluruh hari terakhir
+    return d.isAfter(selectedDateRange!.start.subtract(const Duration(days: 1))) &&
+           d.isBefore(selectedDateRange!.end.add(const Duration(days: 1)));
+  }
+
+  // Helper untuk memeriksa apakah data cocok dengan filter yang diterapkan
+  bool _matchesFilter(Map<String, dynamic> d) {
+    final mSearch = d['nama_pelanggan']
+            ?.toString()
+            .toLowerCase()
+            .contains(searchQuery.toLowerCase()) ??
+        false;
+    final mLayanan = layananFilter == 'Semua' ||
+        d['jenisLayanan']?.toString() == layananFilter;
+    final mBayar = pembayaranFilter == 'Semua' ||
+        d['statusPembayaran']?.toString() == pembayaranFilter;
+    final mKerja = pengerjaanFilter == 'Semua' ||
+        d['statusPengerjaan']?.toString() == pengerjaanFilter;
+    return mSearch && mLayanan && mBayar && mKerja;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Pesanan'),
         backgroundColor: const Color(0xFF3B82F6),
-        foregroundColor: Colors.white, // Agar ikon dan teks di appbar terlihat
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.date_range),
+            onPressed: _selectDateRange,
+            tooltip: 'Filter Tanggal',
+          ),
+        ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('pesanan')
-            .orderBy('tanggal', descending: false) // UBAH: Urutkan dari tanggal paling lama (April duluan)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          // Dapatkan semua pesanan dari snapshot
-          final allPesananList = snapshot.data?.docs ?? [];
-
-          // Pisahkan pesanan menjadi dua kategori
-          final List<DocumentSnapshot> pendingPesananList = [];
-          final List<DocumentSnapshot> completedPesananList = [];
-
-          for (var doc in allPesananList) {
-            final data = doc.data() as Map<String, dynamic>;
-            final statusPengerjaan = data['statusPengerjaan'] ?? 'Antrian';
-            final statusPembayaran = data['statusPembayaran'] ?? 'Belum Lunas';
-
-            if (statusPengerjaan == 'Selesai' && statusPembayaran == 'Lunas') {
-              completedPesananList.add(doc);
-            } else {
-              pendingPesananList.add(doc);
-            }
-          }
-
-          if (pendingPesananList.isEmpty && completedPesananList.isEmpty) {
-            return const Center(
-              child: Text(
-                'Belum ada pesanan yang masuk.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            );
-          }
-
-          return ListView(
+      body: Column(
+        children: [
+          Padding(
             padding: const EdgeInsets.all(8.0),
-            children: [
-              // Bagian Pesanan yang Belum Selesai dan/atau Belum Lunas
-              ...pendingPesananList.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                final docId = doc.id;
-                final isLunas = data['statusPembayaran'] == 'Lunas';
-                final statusPengerjaan = data['statusPengerjaan'] ?? 'Antrian';
-
-                // Tentukan warna badge berdasarkan status pengerjaan
-                Color workStatusColor;
-                switch (statusPengerjaan) {
-                  case 'Antrian':
-                    workStatusColor = Colors.red.shade400; // Merah untuk antrian
-                    break;
-                  case 'Sedang Dikerjakan':
-                    workStatusColor = Colors.blue.shade400; // Biru untuk sedang dikerjakan
-                    break;
-                  case 'Selesai':
-                    workStatusColor = Colors.green.shade400; // Hijau untuk selesai
-                    break;
-                  default:
-                    workStatusColor = Colors.grey.shade400; // Default abu-abu
-                }
-
-                String tanggalFormatted = '-';
-                if (data['tanggal'] != null && data['tanggal'] is Timestamp) {
-                  final tanggal = (data['tanggal'] as Timestamp).toDate();
-                  tanggalFormatted = DateFormat('dd MMM HH:mm').format(tanggal);
-                }
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: isLunas
-                          ? Colors.green.shade200
-                          : Colors.orange.shade200,
-                      width: 1.5,
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Cari nama pelanggan',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.search),
                   ),
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  onChanged: (v) => setState(() => searchQuery = v),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: layananFilter,
+                        decoration: const InputDecoration(
+                          labelText: 'Filter Layanan',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        items: [
+                          'Semua',
+                          'Basic Laundry',
+                          'Cuci Kering',
+                          'Cuci Setrika',
+                          'Setrika Saja'
+                        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                        onChanged: (v) => setState(() => layananFilter = v!),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: pembayaranFilter,
+                        decoration: const InputDecoration(
+                          labelText: 'Filter Pembayaran',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        items: [
+                          'Semua',
+                          'Lunas',
+                          'Belum Lunas',
+                        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                        onChanged: (v) => setState(() => pembayaranFilter = v!),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: pengerjaanFilter,
+                  decoration: const InputDecoration(
+                    labelText: 'Filter Pengerjaan',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  items: [
+                    'Semua',
+                    'Antrian',
+                    'Sedang Dikerjakan',
+                    'Selesai',
+                  ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  onChanged: (v) => setState(() => pengerjaanFilter = v!),
+                ),
+                if (selectedDateRange != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                data['nama_pelanggan'] ?? 'Tanpa Nama',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF3B82F6),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            // Badge untuk status pembayaran (sekarang bisa diklik)
-                            InkWell(
-                              onTap: () {
-                                _showPaymentStatusDialog(docId, isLunas, data['nama_pelanggan']);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isLunas ? Colors.green : Colors.orange,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  isLunas ? 'Lunas' : 'Belum Lunas',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Filter Tanggal: ${DateFormat('dd MMM yy').format(selectedDateRange!.start)} - ${DateFormat('dd MMM yy').format(selectedDateRange!.end)}',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
-                        const SizedBox(height: 8),
-                        // Badge untuk status pengerjaan (menggunakan PopupMenuButton)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: PopupMenuButton<String>(
-                            onSelected: (String result) {
-                              if (result == 'Batalkan') {
-                                _cancelOrder(docId, data['nama_pelanggan']);
-                              } else {
-                                _updateWorkStatus(docId, result);
-                              }
-                            },
-                            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
-                                value: 'Antrian',
-                                child: Text('Antrian'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Sedang Dikerjakan',
-                                child: Text('Sedang Dikerjakan'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Selesai',
-                                child: Text('Selesai'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Batalkan', // Opsi baru: Batalkan
-                                child: Text('Batalkan'),
-                              ),
-                            ],
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: workStatusColor,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                statusPengerjaan,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () => setState(() => selectedDateRange = null),
                         ),
-                        const SizedBox(height: 8), // Spasi setelah badge status pengerjaan
-                        Divider(color: Colors.grey.shade300),
-                        _buildInfoRow('Layanan', data['jenisLayanan'] ?? '-'),
-                        _buildInfoRow('Berat', '${data['berat'] ?? '-'} kg'),
-                        _buildInfoRow('Total Harga',
-                            'Rp${NumberFormat('#,##0', 'id_ID').format(data['total_harga'] ?? 0)}'),
-                        _buildInfoRow('Tanggal Masuk', tanggalFormatted),
                       ],
                     ),
                   ),
-                );
-              }).toList(),
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('pesanan')
+                  .orderBy('tanggal', descending: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              // Bagian Pesanan yang Sudah Selesai dan Lunas
-              if (completedPesananList.isNotEmpty) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-                  child: Divider(color: Colors.grey, thickness: 2), // Pembatas
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  child: Text(
-                    'Pesanan Selesai dan Lunas (Arsip)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                ...completedPesananList.map((doc) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                // Filter data berdasarkan semua filter yang diterapkan
+                final filteredPesananList = snapshot.data?.docs.where((doc) {
                   final data = doc.data() as Map<String, dynamic>;
-                  final docId = doc.id;
-                  final isLunas = data['statusPembayaran'] == 'Lunas';
-                  final statusPengerjaan = data['statusPengerjaan'] ?? 'Antrian';
+                  return _isWithinRange(data['tanggal'] as Timestamp?) && _matchesFilter(data);
+                }).toList() ?? [];
 
-                  // Tentukan warna badge berdasarkan status pengerjaan
-                  Color workStatusColor;
-                  switch (statusPengerjaan) {
-                    case 'Antrian':
-                      workStatusColor = Colors.red.shade400;
-                      break;
-                    case 'Sedang Dikerjakan':
-                      workStatusColor = Colors.blue.shade400;
-                      break;
-                    case 'Selesai':
-                      workStatusColor = Colors.green.shade400;
-                      break;
-                    default:
-                      workStatusColor = Colors.grey.shade400;
-                  }
-
-                  String tanggalFormatted = '-';
-                  if (data['tanggal'] != null && data['tanggal'] is Timestamp) {
-                    final tanggal = (data['tanggal'] as Timestamp).toDate();
-                    tanggalFormatted = DateFormat('dd MMM HH:mm').format(tanggal);
-                  }
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: Colors.grey.shade400, // Border abu-abu untuk arsip
-                        width: 1.5,
-                      ),
+                if (filteredPesananList.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Tidak ada pesanan yang cocok dengan filter.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      textAlign: TextAlign.center,
                     ),
-                    elevation: 2, // Elevasi lebih rendah untuk arsip
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  );
+                }
+
+                // Pisahkan pesanan menjadi dua kategori setelah filter
+                final List<DocumentSnapshot> pendingPesananList = [];
+                final List<DocumentSnapshot> completedPesananList = [];
+
+                for (var doc in filteredPesananList) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final statusPengerjaan = data['statusPengerjaan'] ?? 'Antrian';
+                  final statusPembayaran = data['statusPembayaran'] ?? 'Belum Lunas';
+
+                  if (statusPengerjaan == 'Selesai' && statusPembayaran == 'Lunas') {
+                    completedPesananList.add(doc);
+                  } else {
+                    pendingPesananList.add(doc);
+                  }
+                }
+
+                return ListView(
+                  padding: const EdgeInsets.all(8.0),
+                  children: [
+                    // Bagian Pesanan yang Belum Selesai dan/atau Belum Lunas
+                    ...pendingPesananList.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final docId = doc.id;
+                      final isLunas = data['statusPembayaran'] == 'Lunas';
+                      final statusPengerjaan = data['statusPengerjaan'] ?? 'Antrian';
+
+                      // Tentukan warna badge berdasarkan status pengerjaan
+                      Color workStatusColor;
+                      switch (statusPengerjaan) {
+                        case 'Antrian':
+                          workStatusColor = Colors.red.shade400;
+                          break;
+                        case 'Sedang Dikerjakan':
+                          workStatusColor = Colors.blue.shade400;
+                          break;
+                        case 'Selesai':
+                          workStatusColor = Colors.green.shade400;
+                          break;
+                        default:
+                          workStatusColor = Colors.grey.shade400;
+                      }
+
+                      String tanggalFormatted = '-';
+                      if (data['tanggal'] != null && data['tanggal'] is Timestamp) {
+                        final tanggal = (data['tanggal'] as Timestamp).toDate();
+                        tanggalFormatted = DateFormat('dd MMM HH:mm').format(tanggal);
+                      }
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isLunas
+                                ? Colors.green.shade200
+                                : Colors.orange.shade200,
+                            width: 1.5,
+                          ),
+                        ),
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  data['nama_pelanggan'] ?? 'Tanpa Nama',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade600, // Warna teks lebih pudar
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      data['nama_pelanggan'] ?? 'Tanpa Nama',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF3B82F6),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                  InkWell(
+                                    onTap: () {
+                                      _showPaymentStatusDialog(docId, isLunas, data['nama_pelanggan']);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isLunas ? Colors.green : Colors.orange,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        isLunas ? 'Lunas' : 'Belum Lunas',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              // Badge untuk status pembayaran (sekarang bisa diklik, tampilan pudar)
-                              InkWell(
-                                onTap: () {
-                                  _showPaymentStatusDialog(docId, isLunas, data['nama_pelanggan']);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade500, // Warna badge pembayaran lebih pudar
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    isLunas ? 'Lunas' : 'Belum Lunas',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: InkWell(
+                                  onTap: () {
+                                    _showWorkStatusDialog(docId, statusPengerjaan, data['nama_pelanggan']);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: workStatusColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      statusPengerjaan,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 8),
+                              Divider(color: Colors.grey.shade300),
+                              _buildInfoRow('Layanan', data['jenisLayanan'] ?? '-'),
+                              _buildInfoRow('Berat', '${data['berat'] ?? '-'} kg'),
+                              _buildInfoRow('Total Harga',
+                                  'Rp${NumberFormat('#,##0', 'id_ID').format(data['total_harga'] ?? 0)}'),
+                              _buildInfoRow('Tanggal Masuk', tanggalFormatted),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          // Badge untuk status pengerjaan (menggunakan PopupMenuButton, tampilan pudar)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: PopupMenuButton<String>(
-                              onSelected: (String result) {
-                                if (result == 'Batalkan') {
-                                  _cancelOrder(docId, data['nama_pelanggan']);
-                                } else {
-                                  _updateWorkStatus(docId, result);
-                                }
-                              },
-                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                const PopupMenuItem<String>(
-                                  value: 'Antrian',
-                                  child: Text('Antrian'),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'Sedang Dikerjakan',
-                                  child: Text('Sedang Dikerjakan'),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'Selesai',
-                                  child: Text('Selesai'),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'Batalkan', // Opsi baru: Batalkan
-                                  child: Text('Batalkan'),
-                                ),
-                              ],
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade500, // Warna badge pengerjaan lebih pudar
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  statusPengerjaan,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
+                        ),
+                      );
+                    }).toList(),
+
+                    // Bagian Pesanan yang Sudah Selesai dan Lunas
+                    if (completedPesananList.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                        child: Divider(color: Colors.grey, thickness: 2),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                        child: Text(
+                          'Pesanan Selesai dan Lunas (Arsip)',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                      ...completedPesananList.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final docId = doc.id;
+                        final isLunas = data['statusPembayaran'] == 'Lunas';
+                        final statusPengerjaan = data['statusPengerjaan'] ?? 'Antrian';
+
+                        Color workStatusColor;
+                        switch (statusPengerjaan) {
+                          case 'Antrian':
+                            workStatusColor = Colors.red.shade400;
+                            break;
+                          case 'Sedang Dikerjakan':
+                            workStatusColor = Colors.blue.shade400;
+                            break;
+                          case 'Selesai':
+                            workStatusColor = Colors.green.shade400;
+                            break;
+                          default:
+                            workStatusColor = Colors.grey.shade400;
+                        }
+
+                        String tanggalFormatted = '-';
+                        if (data['tanggal'] != null && data['tanggal'] is Timestamp) {
+                          final tanggal = (data['tanggal'] as Timestamp).toDate();
+                          tanggalFormatted = DateFormat('dd MMM HH:mm').format(tanggal);
+                        }
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.grey.shade400,
+                              width: 1.5,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Divider(color: Colors.grey.shade300),
-                          _buildInfoRow('Layanan', data['jenisLayanan'] ?? '-', textColor: Colors.grey.shade700),
-                          _buildInfoRow('Berat', '${data['berat'] ?? '-'} kg', textColor: Colors.grey.shade700),
-                          _buildInfoRow('Total Harga',
-                              'Rp${NumberFormat('#,##0', 'id_ID').format(data['total_harga'] ?? 0)}', textColor: Colors.grey.shade700),
-                          _buildInfoRow('Tanggal Masuk', tanggalFormatted, textColor: Colors.grey.shade700),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ],
-            ],
-          );
-        },
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        data['nama_pelanggan'] ?? 'Tanpa Nama',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        _showPaymentStatusDialog(docId, isLunas, data['nama_pelanggan']);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade500,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          isLunas ? 'Lunas' : 'Belum Lunas',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: InkWell(
+                                    onTap: () {
+                                      _showWorkStatusDialog(docId, statusPengerjaan, data['nama_pelanggan']);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade500,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        statusPengerjaan,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Divider(color: Colors.grey.shade300),
+                                _buildInfoRow('Layanan', data['jenisLayanan'] ?? '-', textColor: Colors.grey.shade700),
+                                _buildInfoRow('Berat', '${data['berat'] ?? '-'} kg', textColor: Colors.grey.shade700),
+                                _buildInfoRow('Total Harga',
+                                    'Rp${NumberFormat('#,##0', 'id_ID').format(data['total_harga'] ?? 0)}', textColor: Colors.grey.shade700),
+                                _buildInfoRow('Tanggal Masuk', tanggalFormatted, textColor: Colors.grey.shade700),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -515,7 +678,7 @@ class _PesananPageState extends State<PesananPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120, // Lebar tetap untuk label agar rapi
+            width: 120,
             child: Text(
               '$label:',
               style: const TextStyle(

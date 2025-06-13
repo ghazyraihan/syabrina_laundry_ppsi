@@ -1,3 +1,4 @@
+// lib/pages/pemasukan_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -9,17 +10,6 @@ class PemasukanPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Padding(
-        //   padding: const EdgeInsets.all(16.0),
-        //   child: Text(
-        //     'Riwayat Pemasukan',
-        //     style: TextStyle(
-        //       fontSize: 18,
-        //       fontWeight: FontWeight.bold,
-        //       color: Colors.black87,
-        //     ),
-        //   ),
-        // ),
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -28,32 +18,49 @@ class PemasukanPage extends StatelessWidget {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
+                print('Error di PemasukanPage StreamBuilder: ${snapshot.error}');
                 return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
               }
 
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(child: Text('Belum ada data pemasukan.'));
+              List<QueryDocumentSnapshot> docs = snapshot.data!.docs;
+
+              // Filter hanya data yang statusPembayaran-nya "Lunas"
+              docs = docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                return data['statusPembayaran'] == 'Lunas';
+              }).toList();
+
+              // Sort ulang jika perlu
+              docs.sort((a, b) {
+                final tanggalA = (a.data() as Map<String, dynamic>)['tanggal'] as Timestamp?;
+                final tanggalB = (b.data() as Map<String, dynamic>)['tanggal'] as Timestamp?;
+                if (tanggalA == null && tanggalB == null) return 0;
+                if (tanggalA == null) return 1;
+                if (tanggalB == null) return -1;
+                return tanggalB.compareTo(tanggalA);
+              });
+
+              if (docs.isEmpty) {
+                return const Center(child: Text('Belum ada data pemasukan lunas.'));
               }
 
               return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
+                itemCount: docs.length,
                 itemBuilder: (context, index) {
                   try {
-                    final data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
-                    final tanggal = (data['tanggal'] as Timestamp).toDate();
+                    final data = docs[index].data() as Map<String, dynamic>;
+                    final tanggalTimestamp = data['tanggal'] as Timestamp?;
+                    final tanggal = tanggalTimestamp?.toDate();
                     final namaPelanggan = data['nama_pelanggan'] ?? 'Pelanggan';
 
                     double totalHarga = 0.0;
                     final harga = data['total_harga'];
-
-                    if (harga is int) {
+                    if (harga is num) {
                       totalHarga = harga.toDouble();
-                    } else if (harga is double) {
-                      totalHarga = harga;
                     } else if (harga is String) {
                       totalHarga = double.tryParse(harga) ?? 0;
                     }
@@ -62,7 +69,11 @@ class PemasukanPage extends StatelessWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
                         title: Text(namaPelanggan),
-                        subtitle: Text(DateFormat('dd MMMM yyyy').format(tanggal)),
+                        subtitle: Text(
+                          tanggal != null
+                              ? DateFormat('dd MMMM yyyy').format(tanggal)
+                              : 'Tanggal Tidak Tersedia',
+                        ),
                         trailing: Text(
                           NumberFormat.currency(
                             locale: 'id',
@@ -77,7 +88,8 @@ class PemasukanPage extends StatelessWidget {
                       ),
                     );
                   } catch (e) {
-                    return SizedBox(); // Skip jika ada error parsing
+                    print('Error rendering item at index $index: $e');
+                    return const SizedBox();
                   }
                 },
               );

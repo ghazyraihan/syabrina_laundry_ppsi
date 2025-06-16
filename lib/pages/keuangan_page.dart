@@ -166,6 +166,7 @@ class _KeuanganPageState extends State<KeuanganPage>
           const SizedBox(height: 16),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
+            height: 48, // Pastikan tingginya cukup
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -173,14 +174,15 @@ class _KeuanganPageState extends State<KeuanganPage>
             child: TabBar(
               controller: _tabController,
               indicator: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
                 color: accentColor,
+                borderRadius: BorderRadius.circular(10),
               ),
+              indicatorSize: TabBarIndicatorSize.tab,
               labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey,
+              unselectedLabelColor: Colors.black,
               tabs: const [
-                Tab(text: "Masuk"),
-                Tab(text: "Keluar"),
+                Tab(text: "Pemasukan"),
+                Tab(text: "Pengeluaran"),
               ],
             ),
           ),
@@ -207,7 +209,7 @@ class _KeuanganPageState extends State<KeuanganPage>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isMasuk ? "pemasukan bulan ini" : "pengeluaran bulan ini",
+                      isMasuk ? "Pemasukan Bulan Ini" : "Pengeluaran Bulan Ini",
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

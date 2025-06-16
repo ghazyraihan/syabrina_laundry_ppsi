@@ -3,17 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'katalog_page.dart';
 import 'pesanan_page.dart';
 import 'keuangan_page.dart';
-import 'profile.dart'; // Pastikan path ini benar
+import 'profile.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String _userName = 'Pengguna'; // Default value
+  String _userName = 'Pengguna';
 
   @override
   void initState() {
@@ -21,19 +21,16 @@ class _HomePageState extends State<HomePage> {
     _loadUserName();
   }
 
-  // Fungsi untuk mendapatkan nama pengguna dari Firebase Auth
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       setState(() {
-        // Prioritaskan displayName jika ada
         if (user.displayName != null && user.displayName!.isNotEmpty) {
           _userName = user.displayName!;
         } else if (user.email != null && user.email!.isNotEmpty) {
-          // Jika displayName kosong, ambil bagian sebelum '@' dari email
           _userName = user.email!.split('@')[0];
         } else {
-          _userName = 'Pengguna'; // Fallback jika tidak ada displayName atau email
+          _userName = 'Pengguna';
         }
       });
     }
@@ -41,104 +38,125 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final menuItems = [
+      _MenuItem(
+          title: 'KATALOG', icon: Icons.menu_book, page: const KatalogPage()),
+      _MenuItem(
+          title: 'PESANAN',
+          icon: Icons.receipt_long,
+          page: const PesananPage()),
+      _MenuItem(
+          title: 'KEUANGAN',
+          icon: Icons.attach_money,
+          page: const KeuanganPage()),
+    ];
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.blue[700],
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Halo!', style: TextStyle(fontSize: 16, color: Colors.white70)), // Tambahkan warna teks
+            const Text('Halo!',
+                style: TextStyle(fontSize: 16, color: Colors.white70)),
             Text(
-              _userName, // Menggunakan nama pengguna dari Firebase
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white70, // Tambahkan warna teks
-              ),
+              _userName,
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, size: 30, color: Colors.white), // Tambahkan warna ikon
-            onPressed: () async { // <--- Tambahkan 'async' di sini
-              final result = await Navigator.push( // <--- Tambahkan 'await' di sini
+            icon: const Icon(Icons.person, size: 30, color: Colors.white),
+            onPressed: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ProfilePage()),
               );
-              // Jika ada hasil dari ProfilePage (yang berarti pembaruan sukses)
               if (result == true) {
-                _loadUserName(); // Muat ulang nama pengguna
+                _loadUserName();
               }
             },
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          children: [
-            // Kartu untuk Katalog
-            buildMenuCard(context, 'KATALOG', Icons.menu_book, KatalogPage()),
-            const SizedBox(height: 30),
-            // Kartu untuk Pesanan
-            buildMenuCard(
-                context, 'PESANAN', Icons.receipt_long, PesananPage()),
-            const SizedBox(height: 30),
-            // Kartu untuk Keuangan
-            buildMenuCard(
-                context, 'KEUANGAN', Icons.attach_money, KeuanganPage()),
-            const SizedBox(height: 30),
-          ],
+          children: menuItems
+              .map((item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _MenuItemCard(item: item),
+                  ))
+              .toList(),
         ),
       ),
     );
   }
+}
 
-  Widget buildMenuCard(BuildContext context, String title, IconData icon,
-      Widget destinationPage) {
-    return 
-    Expanded( // <--- Tambahkan Expanded di sini agar kartu mengisi ruang
-      child: 
-      GestureDetector(
-        onTap: () async { // <--- Tambahkan async di sini jika mau menangani hasil balik
-          // Jika Anda ingin _loadUserName() dipanggil setelah kembali dari halaman tujuan,
-          // Anda bisa melakukan hal serupa seperti navigasi ke ProfilePage
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => destinationPage),
-          );
-          // Jika halaman tujuan bisa mengubah data yang relevan dengan Home (misal: order baru),
-          // Anda bisa panggil _loadUserName() atau fungsi refresh lainnya di sini.
-          // Untuk saat ini, kita hanya memanggil _loadUserName() jika kembali dari ProfilePage.
-        },
-        child: Container(
-          height: 100, // <--- Hapus atau sesuaikan, karena Expanded akan mengatur tinggi
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.blue[400],
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 36, color: Colors.black),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                )
-              ],
+class _MenuItem {
+  final String title;
+  final IconData icon;
+  final Widget page;
+
+  _MenuItem({required this.title, required this.icon, required this.page});
+}
+
+class _MenuItemCard extends StatelessWidget {
+  final _MenuItem item;
+
+  const _MenuItemCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => item.page),
+        );
+      },
+      child: Container(
+        height: 100,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Icon(item.icon, size: 32, color: Colors.blue.shade800),
             ),
-          ),
+            const SizedBox(width: 20),
+            Text(
+              item.title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
         ),
       ),
     );

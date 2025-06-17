@@ -1,16 +1,38 @@
-# syabrina_laundry_ppsi
+# SYLAU - Aplikasi Manajemen Laundry
 
-A new Flutter project.
+Aplikasi mobile berbasis Flutter yang dikembangkan untuk membantu pemilik usaha Syabrina Laundry dalam mengelola pesanan dan keuangan secara efisien.
 
-## Getting Started
+## Fitur Utama
+- Login untuk keamanan akses
+- Manajemen Katalog: tambah, ubah, hapus layanan laundry
+- Manajemen Pesanan: tambah, lihat, hapus, riwayat pesanan
+- Pencatatan Keuangan:
+  - Pemasukan otomatis dari transaksi
+  - Pengeluaran: input, edit, hapus
+- Tampilan Dashboard Ringkasan
 
-This project is a starting point for a Flutter application.
+## Kredensial Login Demo
+- Email: rezasaft13@gmail.com
+- Password: 12345678
 
-A few resources to get you started if this is your first Flutter project:
+## Cara Menjalankan Aplikasi
+1. Clone repositori ini:
+   bash
+   git clone https://github.com/ghazyraihan/syabrina_laundry_ppsi.git
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Masuk ke folder project:
+   bash
+   cd syabrina_laundry_ppsi
+   
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. ⁠code .
+
+4. Install dependencies Flutter:
+   bash
+   flutter pub get
+   
+
+5. Jalankan aplikasi di emulator atau device:
+   bash
+   flutter run
+   
